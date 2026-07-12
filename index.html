@@ -160,7 +160,7 @@
 
         .price-btn {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end; /* Aligne le bouton à droite maintenant que le prix est parti */
             align-items: center;
             margin-top: auto;
         }
@@ -388,7 +388,6 @@
                         <input type="text" id="avoid-ingredients" class="custom-input" placeholder="Ex: olives, anchois, champignons...">
                     </div>
                     <div class="price-btn">
-                        <span class="price">10.00 €</span>
                         <button class="add-pizza-btn" onclick="addSurpriseToCart()">Ajouter</button>
                     </div>
                 </div>
@@ -492,7 +491,6 @@
                     <p>${pizza.ingredients}</p>
                 </div>
                 <div class="price-btn">
-                    <span class="price">${PIZZA_PRICE.toFixed(2)} €</span>
                     <button class="add-pizza-btn" onclick="addToCart('${pizza.name.replace(/'/g, "\\'")}')" ${!COMMANDES_OUVERTES ? 'disabled style="background:#444;cursor:not-allowed;"' : ''}>Ajouter</button>
                 </div>
             `;
