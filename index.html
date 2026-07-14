@@ -79,6 +79,67 @@
             gap: 0.5rem;
         }
 
+        /* --- NOUVEAU STYLE : BOUTON PASSER SON TOUR & CONFIRMATION --- */
+        .skip-container {
+            max-width: 1400px;
+            margin: 1.5rem auto 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-skip-pizza {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background-color: var(--card-bg);
+            color: var(--text-light);
+            border: 1px solid #444;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn-skip-pizza:hover {
+            border-color: var(--primary);
+            background-color: #333;
+            transform: translateY(-2px);
+        }
+
+        .pizza-barree {
+            position: relative;
+            display: inline-flex;
+            font-size: 1.4rem;
+        }
+
+        .pizza-barree .barre {
+            position: absolute;
+            top: 50%;
+            left: -2px;
+            width: 110%;
+            height: 3px;
+            background-color: var(--primary);
+            transform: rotate(-45deg);
+            transform-origin: center;
+        }
+
+        .skip-confirm-msg {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid #10b981;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        /* ------------------------------------------------------------- */
+
         .container {
             max-width: 1400px;
             margin: 2rem auto;
@@ -160,7 +221,7 @@
 
         .price-btn {
             display: flex;
-            justify-content: flex-end; /* Aligne le bouton à droite maintenant que le prix est parti */
+            justify-content: flex-end;
             align-items: center;
             margin-top: auto;
         }
@@ -362,6 +423,19 @@
         <span>🚚 <strong>Jour de livraison :</strong> <span id="display-delivery">...</span></span>
     </div>
 
+    <div class="skip-container">
+        <button id="btn-skip" class="btn-skip-pizza">
+            <div class="pizza-barree">
+                <span class="pizza">🍕</span>
+                <span class="barre"></span>
+            </div>
+            Je passe mon tour cette semaine
+        </button>
+        <div id="confirmation-skip" class="skip-confirm-msg" style="display: none;">
+            🎉 C'est noté, à la prochaine !
+        </div>
+    </div>
+
     <div class="container">
         <main>
             <h2 class="section-title">la carte</h2>
@@ -416,208 +490,4 @@
                 <span>Total :</span>
                 <span id="cart-total-price">0.00 €</span>
             </div>
-            <button id="submit-btn" class="btn-order" onclick="checkout()">Confirmer la commande</button>
-        </aside>
-    </div>
-
-    <script>
-        // ==========================================
-        //  CONFIGURATION DE LA SESSION
-        // ==========================================
-        const DATE_LIMITE_COMMANDE = "mercredi 15 juillet à 20h";
-        const DATE_DE_LIVRAISON = "vendredi 17 juillet matin";
-        const FORMSPREE_URL = "https://formspree.io/f/mvzepnew"; 
-        
-        const COMMANDES_OUVERTES = true; 
-
-        // ==========================================
-        //  GESTION DE L'OUVERTURE / FERMETURE
-        // ==========================================
-        document.getElementById('display-deadline').innerText = DATE_LIMITE_COMMANDE;
-        document.getElementById('display-delivery').innerText = DATE_DE_LIVRAISON;
-
-        const statusContainer = document.getElementById('status-container');
-        const submitBtn = document.getElementById('submit-btn');
-
-        if (COMMANDES_OUVERTES) {
-            statusContainer.innerHTML = `
-                <div class="cart-delivery-reminder">
-                    Livraison prévue le <strong>${DATE_DE_LIVRAISON.split(' ')[0]}</strong>
-                </div>
-            `;
-        } else {
-            statusContainer.innerHTML = `
-                <div class="closed-alert">
-                    🛑 Les commandes sont fermées pour cette session. À la prochaine !
-                </div>
-            `;
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Commandes fermées";
-        }
-
-        // ==========================================
-        //  RESTE DU CODE DU SITE
-        // ==========================================
-        const menuBaseCreme = [
-            { id: 1, name: "La Cocotte Crémeuse", ingredients: "Poulet, mozzarella." },
-            { id: 2, name: "La Cocotte Épicée", ingredients: "Poulet, chorizo." },
-            { id: 3, name: "La Montagnarde", ingredients: "Pommes de terre, lardons, reblochon." },
-            { id: 4, name: "La Pistach'Bella", ingredients: "Mortadelle, pistache." }
-        ];
-
-        const menuBaseTomate = [
-            { id: 5, name: "La Jambonnette", ingredients: "Jambon, mozzarella." },
-            { id: 6, name: "L'Explosion Lactée", ingredients: "Trois fromages." },
-            { id: 7, name: "Le Jardin du Soleil", ingredients: "Poivron, aubergine, oignon rouge." },
-            { id: 8, name: "La Bouchère", ingredients: "Viande hachée, oignon rouge." },
-            { id: 9, name: "La Dolce Vita", ingredients: "Mozzarella, jambon cru." }
-        ];
-
-        const PIZZA_PRICE = 10.00;
-        let cart = [];
-
-        const cremeContainer = document.getElementById('base-creme-menu');
-        menuBaseCreme.forEach(pizza => { cremeContainer.appendChild(createPizzaCard(pizza)); });
-
-        const tomateContainer = document.getElementById('base-tomate-menu');
-        menuBaseTomate.forEach(pizza => { tomateContainer.appendChild(createPizzaCard(pizza)); });
-
-        function createPizzaCard(pizza) {
-            const card = document.createElement('div');
-            card.className = 'pizza-card';
-            card.innerHTML = `
-                <div class="pizza-info">
-                    <h3>${pizza.name}</h3>
-                    <p>${pizza.ingredients}</p>
-                </div>
-                <div class="price-btn">
-                    <button class="add-pizza-btn" onclick="addToCart('${pizza.name.replace(/'/g, "\\'")}')" ${!COMMANDES_OUVERTES ? 'disabled style="background:#444;cursor:not-allowed;"' : ''}>Ajouter</button>
-                </div>
-            `;
-            return card;
-        }
-
-        if(!COMMANDES_OUVERTES) {
-            document.querySelector('.surprise-card button').disabled = true;
-            document.querySelector('.surprise-card button').style.background = "#444";
-            document.querySelector('.surprise-card button').style.cursor = "not-allowed";
-        }
-
-        function addToCart(name, meta = "") {
-            if (!COMMANDES_OUVERTES) return;
-            const existingItem = cart.find(item => item.name === name && item.meta === meta);
-            if (existingItem) { existingItem.quantity += 1; } 
-            else { cart.push({ name, price: PIZZA_PRICE, quantity: 1, meta }); }
-            updateCartUI();
-        }
-
-        function addSurpriseToCart() {
-            if (!COMMANDES_OUVERTES) return;
-            const avoidInput = document.getElementById('avoid-ingredients');
-            const exclusions = avoidInput.value.trim();
-            const metaInfo = exclusions ? `Sans : ${exclusions}` : "Carte blanche !";
-            addToCart("La Pizza Surprise", metaInfo);
-            avoidInput.value = ""; 
-        }
-
-        function updateQuantity(index, change) {
-            cart[index].quantity += change;
-            if (cart[index].quantity <= 0) { cart.splice(index, 1); }
-            updateCartUI();
-        }
-
-        function updateCartUI() {
-            const cartItemsContainer = document.getElementById('cart-items');
-            const cartTotalPriceElement = document.getElementById('cart-total-price');
-            cartItemsContainer.innerHTML = '';
-            let total = 0;
-
-            if (cart.length === 0) {
-                cartItemsContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem 0;">Votre panier est vide.</p>';
-                cartTotalPriceElement.innerText = '0.00 €';
-                return;
-            }
-
-            cart.forEach((item, index) => {
-                total += item.price * item.quantity;
-                const itemRow = document.createElement('div');
-                itemRow.className = 'cart-item';
-                itemRow.innerHTML = `
-                    <div class="cart-item-details">
-                        <strong>${item.name}</strong>
-                        ${item.meta ? `<span class="cart-item-meta">${item.meta}</span>` : ''}
-                        <span style="color: var(--gold); font-size: 0.9rem;">${(item.price * item.quantity).toFixed(2)} €</span>
-                    </div>
-                    <div class="cart-controls">
-                        <button class="btn-small" onclick="updateQuantity(${index}, -1)">-</button>
-                        <span>${item.quantity}</span>
-                        <button class="btn-small" onclick="updateQuantity(${index}, 1)">+</button>
-                    </div>
-                `;
-                cartItemsContainer.appendChild(itemRow);
-            });
-            cartTotalPriceElement.innerText = `${total.toFixed(2)} €`;
-        }
-
-        function checkout() {
-            if (!COMMANDES_OUVERTES) return;
-            const nameInput = document.getElementById('client-name');
-            const clientName = nameInput.value.trim();
-            const wantsSpicyOil = document.getElementById('spicy-oil').checked;
-
-            if (!clientName) {
-                alert("⚠️ S'il vous plaît, indiquez votre nom avant de confirmer.");
-                nameInput.focus();
-                return;
-            }
-            if (cart.length === 0) {
-                alert("Votre panier est vide !");
-                return;
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Envoi en cours...";
-
-            let listePizzas = "";
-            let total = 0;
-            cart.forEach(item => {
-                listePizzas += `${item.quantity}x ${item.name}`;
-                if(item.meta) listePizzas += ` (${item.meta})`;
-                listePizzas += `\n`;
-                total += item.price * item.quantity;
-            });
-
-            const formData = new FormData();
-            formData.append("Nom du client", clientName);
-            formData.append("Commande", listePizzas);
-            formData.append("Huile Pimentée", wantsSpicyOil ? "OUI 🌶️" : "NON");
-            formData.append("Total de la commande", `${total.toFixed(2)} €`);
-            formData.append("Session Livraison", DATE_DE_LIVRAISON); 
-
-            fetch(FORMSPREE_URL, {
-                method: "POST",
-                body: formData,
-                headers: { 'Accept': 'application/json' }
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert(`🍕 Merci pour votre commande, ${clientName} ! Elle a bien été transmise à Pizz'avin pour la livraison de ${DATE_DE_LIVRAISON.split(' ')[0]} !`);
-                    cart = [];
-                    nameInput.value = "";
-                    document.getElementById('spicy-oil').checked = false;
-                    updateCartUI();
-                } else {
-                    alert("Erreur lors de la commande. Veuillez réessayer.");
-                }
-            })
-            .catch(error => {
-                alert("Un problème de connexion est survenu.");
-            })
-            .finally(() => {
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Confirmer la commande";
-            });
-        }
-    </script>
-</body>
-</html>
+            <button id="
