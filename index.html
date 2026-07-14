@@ -79,6 +79,67 @@
             gap: 0.5rem;
         }
 
+        /* --- STYLES DU BOUTON PASSER SON TOUR --- */
+        .skip-container {
+            max-width: 1400px;
+            margin: 1.5rem auto 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-skip-pizza {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background-color: var(--card-bg);
+            color: var(--text-light);
+            border: 1px solid #444;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn-skip-pizza:hover {
+            border-color: var(--primary);
+            background-color: #333;
+            transform: translateY(-2px);
+        }
+
+        .pizza-barree {
+            position: relative;
+            display: inline-flex;
+            font-size: 1.4rem;
+        }
+
+        .pizza-barree .barre {
+            position: absolute;
+            top: 50%;
+            left: -2px;
+            width: 110%;
+            height: 3px;
+            background-color: var(--primary);
+            transform: rotate(-45deg);
+            transform-origin: center;
+        }
+
+        .skip-confirm-msg {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid #10b981;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        /* -------------------------------------- */
+
         .container {
             max-width: 1400px;
             margin: 2rem auto;
@@ -160,7 +221,7 @@
 
         .price-btn {
             display: flex;
-            justify-content: flex-end; /* Aligne le bouton à droite maintenant que le prix est parti */
+            justify-content: flex-end;
             align-items: center;
             margin-top: auto;
         }
@@ -362,6 +423,19 @@
         <span>🚚 <strong>Jour de livraison :</strong> <span id="display-delivery">...</span></span>
     </div>
 
+    <div class="skip-container">
+        <button id="btn-skip" class="btn-skip-pizza">
+            <div class="pizza-barree">
+                <span class="pizza">🍕</span>
+                <span class="barre"></span>
+            </div>
+            Je passe mon tour cette semaine
+        </button>
+        <div id="confirmation-skip" class="skip-confirm-msg" style="display: none;">
+            🎉 C'est noté, à la prochaine !
+        </div>
+    </div>
+
     <div class="container">
         <main>
             <h2 class="section-title">la carte</h2>
@@ -453,7 +527,57 @@
             `;
             submitBtn.disabled = true;
             submitBtn.innerText = "Commandes fermées";
+            
+            // On cache le bouton si les commandes globales sont closes
+            document.getElementById('btn-skip').style.display = 'none';
         }
+
+        // ==========================================
+        //  LOGIQUE DU BOUTON "PASSER SON TOUR"
+        // ==========================================
+        document.getElementById('btn-skip').addEventListener('click', function() {
+            const nameInput = document.getElementById('client-name');
+            const clientName = nameInput.value.trim();
+
+            if (!clientName) {
+                alert("⚠️ S'il vous plaît, indiquez votre nom avant de passer votre tour.");
+                nameInput.focus();
+                return;
+            }
+
+            const bouton = this;
+            bouton.disabled = true;
+            bouton.innerText = "Envoi...";
+
+            const formData = new FormData();
+            formData.append("Nom du client", clientName);
+            formData.append("Statut Session", "❌ PASSE SON TOUR CETTE SEMAINE");
+            formData.append("Session Livraison", DATE_DE_LIVRAISON);
+
+            fetch(FORMSPREE_URL, {
+                method: "POST",
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(response => {
+                if (response.ok) {
+                    bouton.style.display = 'none';
+                    document.getElementById('confirmation-skip').style.display = 'block';
+                    cart = [];
+                    nameInput.value = "";
+                    updateCartUI();
+                } else {
+                    alert("Erreur lors de l'envoi. Veuillez réessayer.");
+                    bouton.disabled = false;
+                    bouton.innerHTML = `<div class="pizza-barree"><span class="pizza">🍕</span><span class="barre"></span></div> Je passe mon tour cette semaine`;
+                }
+            })
+            .catch(error => {
+                alert("Un problème de connexion est survenu.");
+                bouton.disabled = false;
+                bouton.innerHTML = `<div class="pizza-barree"><span class="pizza">🍕</span><span class="barre"></span></div> Je passe mon tour cette semaine`;
+            });
+        });
 
         // ==========================================
         //  RESTE DU CODE DU SITE
