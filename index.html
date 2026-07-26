@@ -28,26 +28,71 @@
             line-height: 1.5;
         }
 
+        /* --- HEADER MODIFIÉ --- */
         header {
             background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url('https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1000&q=80') center/cover;
-            padding: 3rem 1rem;
-            text-align: center;
+            padding: 1.5rem 2rem;
             border-bottom: 3px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .header-logo {
+            height: 90px;
+            width: auto;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .header-title-container {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        /* Espace vide à droite pour rééquilibrer le flexbox et garder le titre exactement au centre */
+        .header-spacer {
+            width: 90px; 
         }
 
         header h1 {
-            font-size: 3rem;
+            font-size: 2.8rem;
             color: #fff;
             text-transform: uppercase;
             letter-spacing: 3px;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.2rem;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
 
         header p {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: var(--gold);
             font-style: italic;
+        }
+
+        /* Adaptatif pour mobile */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 1.5rem 1rem;
+            }
+            .header-title-container {
+                position: static;
+                transform: none;
+                margin-top: 1rem;
+            }
+            .header-spacer {
+                display: none;
+            }
+            .header-logo {
+                height: 80px;
+            }
+            header h1 {
+                font-size: 2rem;
+            }
         }
 
         .promo-banner {
@@ -484,8 +529,15 @@
 <body>
 
     <header>
-        <h1>🍕 PIZZ'AVIN</h1>
-        <p>Des pizzas faites avec passion et quelques ingredients quand même🤣</p>
+        <img src="81244.png" alt="Pizz'avin Logo" class="header-logo">
+        
+        <div class="header-title-container">
+            <h1>PIZZ'AVIN</h1>
+            <p>Des pizzas faites avec passion et quelques ingrédients quand même 🤣</p>
+        </div>
+
+        <!-- Élément invisible pour équilibrer la mise en page flexbox -->
+        <div class="header-spacer"></div>
     </header>
 
     <div class="promo-banner">
@@ -629,7 +681,6 @@
         const mainSkipBtn = document.getElementById('btn-skip');
 
         function ouvrirModalSkip() {
-            // Optionnel : Si l'utilisateur a déjà écrit son nom dans le panier à droite, on lui pré-remplit
             const prefilledName = document.getElementById('client-name').value.trim();
             if(prefilledName) {
                 modalInput.value = prefilledName;
@@ -643,7 +694,6 @@
             modalInput.value = ''; 
         }
 
-        // Ferme la fenêtre si on clique en dehors de la boîte
         window.addEventListener('click', function(event) {
             if (event.target === modalSkip) {
                 fermerModalSkip();
@@ -651,12 +701,11 @@
         });
 
         function validerModalSkip(event) {
-            event.preventDefault(); // Empêche la page de se recharger
+            event.preventDefault();
             
             const clientName = modalInput.value.trim();
             if (!clientName) return;
 
-            // Bloque le bouton dans la modale
             modalSubmitBtn.disabled = true;
             modalSubmitBtn.innerText = "Envoi...";
 
@@ -672,12 +721,10 @@
             })
             .then(response => {
                 if (response.ok) {
-                    // Cache la fenêtre modale et le bouton principal
                     fermerModalSkip();
                     mainSkipBtn.style.display = 'none';
                     document.getElementById('confirmation-skip').style.display = 'block';
                     
-                    // Nettoie aussi le panier par sécurité
                     cart = [];
                     document.getElementById('client-name').value = "";
                     updateCartUI();
